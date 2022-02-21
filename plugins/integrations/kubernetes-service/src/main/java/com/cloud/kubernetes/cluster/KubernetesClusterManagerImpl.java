@@ -164,7 +164,7 @@ import com.cloud.utils.net.NetUtils;
 import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.dao.VMInstanceDao;
-import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
 
 import static com.cloud.utils.NumbersUtil.toHumanReadableSize;
 
@@ -475,7 +475,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
                 Pair<HostVO, Integer> hp = hostEntry.getValue();
                 HostVO h = hp.first();
                 hostDao.loadHostTags(h);
-                if (!Strings.isNullOrEmpty(offering.getHostTag()) && !(h.getHostTags() != null && h.getHostTags().contains(offering.getHostTag()))) {
+                if (StringUtils.isNotEmpty(offering.getHostTag()) && !(h.getHostTags() != null && h.getHostTags().contains(offering.getHostTag()))) {
                     continue;
                 }
                 int reserved = hp.second();
@@ -553,6 +553,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         response.setDomainId(domain.getUuid());
         response.setDomainName(domain.getName());
         response.setKeypair(kubernetesCluster.getKeyPair());
+        response.setKeypairId(String.valueOf(kubernetesCluster.getKeyPairId()));
         response.setState(kubernetesCluster.getState().toString());
         response.setCores(String.valueOf(kubernetesCluster.getCores()));
         response.setMemory(String.valueOf(kubernetesCluster.getMemory()));
@@ -613,6 +614,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         final Account owner = accountService.getActiveAccountById(cmd.getEntityOwnerId());
         final Long networkId = cmd.getNetworkId();
         final String sshKeyPair = cmd.getSSHKeyPairName();
+        final Long sshKeyPairId = cmd.getSSHKeyPairId();
         final Long controlNodeCount = cmd.getControlNodes();
         final Long clusterSize = cmd.getClusterSize();
         final long totalNodeCount = controlNodeCount + clusterSize;
@@ -691,10 +693,10 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
             throw new InvalidParameterValueException("No service offering with ID: " + serviceOfferingId);
         }
 
-        if (sshKeyPair != null && !sshKeyPair.isEmpty()) {
-            SSHKeyPairVO sshKeyPairVO = sshKeyPairDao.findByName(owner.getAccountId(), owner.getDomainId(), sshKeyPair);
+        if (sshKeyPair != null && !sshKeyPair.isEmpty() && sshKeyPairId != null && sshKeyPairId <= 0) {
+            SSHKeyPairVO sshKeyPairVO = sshKeyPairDao.findById(sshKeyPairId);
             if (sshKeyPairVO == null) {
-                throw new InvalidParameterValueException(String.format("Given SSH key pair with name: %s was not found for the account %s", sshKeyPair, owner.getAccountName()));
+                throw new InvalidParameterValueException(String.format("Given SSH key pair with id: %s was not found for the account %s", sshKeyPairId, owner.getAccountName()));
             }
         }
 
@@ -716,7 +718,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
             }
         }
 
-        if (!Strings.isNullOrEmpty(externalLoadBalancerIpAddress)) {
+        if (StringUtils.isNotEmpty(externalLoadBalancerIpAddress)) {
             if (!NetUtils.isValidIp4(externalLoadBalancerIpAddress) && !NetUtils.isValidIp6(externalLoadBalancerIpAddress)) {
                 throw new InvalidParameterValueException("Invalid external load balancer IP address");
             }
@@ -728,8 +730,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
             }
         }
 
-        if (!KubernetesClusterExperimentalFeaturesEnabled.value() && (!Strings.isNullOrEmpty(dockerRegistryUrl) ||
-                !Strings.isNullOrEmpty(dockerRegistryUserName) || !Strings.isNullOrEmpty(dockerRegistryEmail) || !Strings.isNullOrEmpty(dockerRegistryPassword))) {
+        if (!KubernetesClusterExperimentalFeaturesEnabled.value() && !StringUtils.isAllEmpty(dockerRegistryUrl, dockerRegistryUserName, dockerRegistryEmail, dockerRegistryPassword)) {
             throw new CloudRuntimeException(String.format("Private registry for the Kubernetes cluster is an experimental feature. Use %s configuration for enabling experimental features", KubernetesClusterExperimentalFeaturesEnabled.key()));
         }
     }
@@ -749,7 +750,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
                     throw new InvalidParameterValueException(String.format("Network ID: %s is already under use by another Kubernetes cluster", network.getUuid()));
                 }
             } else if (Network.GuestType.Shared.equals(network.getGuestType())) {
-                if (controlNodesCount > 1 && Strings.isNullOrEmpty(externalLoadBalancerIpAddress)) {
+                if (controlNodesCount > 1 && StringUtils.isEmpty(externalLoadBalancerIpAddress)) {
                     throw new InvalidParameterValueException(String.format("Multi-control nodes, HA Kubernetes cluster with %s network ID: %s needs an external load balancer IP address. %s parameter can be used",
                             network.getGuestType().toString(), network.getUuid(), ApiConstants.EXTERNAL_LOAD_BALANCER_IP_ADDRESS));
                 }
@@ -785,29 +786,31 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
             @Override
             public void doInTransactionWithoutResult(TransactionStatus status) {
                 List<KubernetesClusterDetailsVO> details = new ArrayList<>();
-                if (Network.GuestType.Shared.equals(network.getGuestType()) && !Strings.isNullOrEmpty(externalLoadBalancerIpAddress)) {
-                    details.add(new KubernetesClusterDetailsVO(kubernetesCluster.getId(), ApiConstants.EXTERNAL_LOAD_BALANCER_IP_ADDRESS, externalLoadBalancerIpAddress, true));
+                long kubernetesClusterId = kubernetesCluster.getId();
+
+                if (Network.GuestType.Shared.equals(network.getGuestType())) {
+                    addKubernetesClusterDetailIfIsNotEmpty(details, kubernetesClusterId, ApiConstants.EXTERNAL_LOAD_BALANCER_IP_ADDRESS, externalLoadBalancerIpAddress, true);
                 }
-                if (!Strings.isNullOrEmpty(dockerRegistryUserName)) {
-                    details.add(new KubernetesClusterDetailsVO(kubernetesCluster.getId(), ApiConstants.DOCKER_REGISTRY_USER_NAME, dockerRegistryUserName, true));
-                }
-                if (!Strings.isNullOrEmpty(dockerRegistryPassword)) {
-                    details.add(new KubernetesClusterDetailsVO(kubernetesCluster.getId(), ApiConstants.DOCKER_REGISTRY_PASSWORD, dockerRegistryPassword, false));
-                }
-                if (!Strings.isNullOrEmpty(dockerRegistryUrl)) {
-                    details.add(new KubernetesClusterDetailsVO(kubernetesCluster.getId(), ApiConstants.DOCKER_REGISTRY_URL, dockerRegistryUrl, true));
-                }
-                if (!Strings.isNullOrEmpty(dockerRegistryEmail)) {
-                    details.add(new KubernetesClusterDetailsVO(kubernetesCluster.getId(), ApiConstants.DOCKER_REGISTRY_EMAIL, dockerRegistryEmail, true));
-                }
-                details.add(new KubernetesClusterDetailsVO(kubernetesCluster.getId(), ApiConstants.USERNAME, "admin", true));
+
+                addKubernetesClusterDetailIfIsNotEmpty(details, kubernetesClusterId, ApiConstants.DOCKER_REGISTRY_USER_NAME, dockerRegistryUserName, true);
+                addKubernetesClusterDetailIfIsNotEmpty(details, kubernetesClusterId, ApiConstants.DOCKER_REGISTRY_PASSWORD, dockerRegistryPassword, false);
+                addKubernetesClusterDetailIfIsNotEmpty(details, kubernetesClusterId, ApiConstants.DOCKER_REGISTRY_URL, dockerRegistryUrl, true);
+                addKubernetesClusterDetailIfIsNotEmpty(details, kubernetesClusterId, ApiConstants.DOCKER_REGISTRY_EMAIL, dockerRegistryEmail, true);
+
+                details.add(new KubernetesClusterDetailsVO(kubernetesClusterId, ApiConstants.USERNAME, "admin", true));
                 SecureRandom random = new SecureRandom();
                 String randomPassword = new BigInteger(130, random).toString(32);
-                details.add(new KubernetesClusterDetailsVO(kubernetesCluster.getId(), ApiConstants.PASSWORD, randomPassword, false));
-                details.add(new KubernetesClusterDetailsVO(kubernetesCluster.getId(), "networkCleanup", String.valueOf(networkCleanup), true));
+                details.add(new KubernetesClusterDetailsVO(kubernetesClusterId, ApiConstants.PASSWORD, randomPassword, false));
+                details.add(new KubernetesClusterDetailsVO(kubernetesClusterId, "networkCleanup", String.valueOf(networkCleanup), true));
                 kubernetesClusterDetailsDao.saveDetails(details);
             }
         });
+    }
+
+    protected void addKubernetesClusterDetailIfIsNotEmpty(List<KubernetesClusterDetailsVO> details, long id, String name, String value, boolean display) {
+        if (StringUtils.isNotEmpty(value)) {
+            details.add(new KubernetesClusterDetailsVO(id, name, value, display));
+        }
     }
 
     private void validateKubernetesClusterScaleParameters(ScaleKubernetesClusterCmd cmd) {
@@ -1061,7 +1064,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
             public KubernetesClusterVO doInTransaction(TransactionStatus status) {
                 KubernetesClusterVO newCluster = new KubernetesClusterVO(cmd.getName(), cmd.getDisplayName(), zone.getId(), clusterKubernetesVersion.getId(),
                         serviceOffering.getId(), finalTemplate.getId(), defaultNetwork.getId(), owner.getDomainId(),
-                        owner.getAccountId(), controlNodeCount, clusterSize, KubernetesCluster.State.Created, cmd.getSSHKeyPairName(), cores, memory, cmd.getNodeRootDiskSize(), "");
+                        owner.getAccountId(), controlNodeCount, clusterSize, KubernetesCluster.State.Created, cmd.getSSHKeyPairName(), cmd.getSSHKeyPairId(), cores, memory, cmd.getNodeRootDiskSize(), "");
                 kubernetesClusterDao.persist(newCluster);
                 return newCluster;
             }
@@ -1145,7 +1148,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         } else {
             String apiKey = kubeadmin.getApiKey();
             String secretKey = kubeadmin.getSecretKey();
-            if (Strings.isNullOrEmpty(apiKey) || Strings.isNullOrEmpty(secretKey)) {
+            if (StringUtils.isAnyEmpty(apiKey, secretKey)) {
                 keys = accountService.createApiKeyAndSecretKey(kubeadmin.getId());
             } else {
                 keys = new String[]{apiKey, secretKey};
@@ -1262,7 +1265,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         response.setName(kubernetesCluster.getName());
         String configData = "";
         KubernetesClusterDetailsVO clusterDetailsVO = kubernetesClusterDetailsDao.findDetail(kubernetesCluster.getId(), "kubeConfigData");
-        if (clusterDetailsVO != null && !Strings.isNullOrEmpty(clusterDetailsVO.getValue())) {
+        if (clusterDetailsVO != null && StringUtils.isNotEmpty(clusterDetailsVO.getValue())) {
             configData = new String(Base64.decodeBase64(clusterDetailsVO.getValue()));
         } else {
             String exceptionMessage = KubernetesCluster.State.Starting.equals(kubernetesCluster.getState()) ?

@@ -40,8 +40,8 @@
           </router-link>
         </a-menu-item>
         <a-menu-item class="user-menu-item" key="1">
-          <a :href="$store.getters.features.wallportaldashboardurl" target="_blank" v-if="$store.getters.userInfo.roletype === 'Admin'">
-            <a-icon class="user-menu-item-icon" type="global"/>
+          <a :href="'http://' + $store.getters.features.host + ':' + $store.getters.features.wallportalport + '/login?orgId=1'" target="_blank" v-if="$store.getters.userInfo.roletype === 'Admin'">
+            <a-icon class="user-menu-item-icon" type="area-chart"/>
             <span class="user-menu-item-name">{{ $t('label.wall.portal.url') }}</span>
           </a>
         </a-menu-item>
@@ -90,7 +90,8 @@ export default {
   },
   data () {
     return {
-      image: ''
+      image: '',
+      countNotify: 0
     }
   },
   created () {
@@ -98,6 +99,12 @@ export default {
     eventBus.$on('refresh-header', () => {
       this.getIcon()
     })
+    this.$store.watch(
+      (state, getters) => getters.countNotify,
+      (newValue, oldValue) => {
+        this.countNotify = newValue
+      }
+    )
   },
   watch: {
     image () {
@@ -143,6 +150,10 @@ export default {
           description: err.message
         })
       })
+    },
+    clearAllNotify () {
+      this.$store.commit('SET_COUNT_NOTIFY', 0)
+      this.$notification.destroy()
     }
   }
 }

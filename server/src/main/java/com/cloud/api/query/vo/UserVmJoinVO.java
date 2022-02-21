@@ -142,6 +142,9 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
     @Column(name = "private_mac_address", updatable = true, nullable = true)
     private String privateMacAddress;
 
+    @Column(name = "cluster_id", updatable = true, nullable = false)
+    private Long clusterId;
+
     @Column(name = "pod_id", updatable = true, nullable = false)
     private Long podId;
 
@@ -351,7 +354,13 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
     private String projectName;
 
     @Column(name = "keypair_name")
-    private String keypairName;
+    private String keyPairName;
+
+    @Column(name = "keypair_id")
+    private long keyPairId;
+
+    @Column(name = "keypair_uuid")
+    private String keyPairUuid;
 
     @Column(name = "job_id")
     private Long jobId;
@@ -530,6 +539,10 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
         return lastHostId;
     }
 
+    public Long getClusterId() {
+        return clusterId;
+    }
+
     public Long getPodId() {
         return podId;
     }
@@ -620,6 +633,10 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
 
     public String getBackupOfferingUuid() {
         return backupOfferingUuid;
+    }
+
+    public Long getBackupOfferingId() {
+        return backupOfferingId;
     }
 
     public String getBackupOfferingName() {
@@ -768,8 +785,16 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
         return projectName;
     }
 
-    public String getKeypairName() {
-        return keypairName;
+    public String getKeyPairName() {
+        return keyPairName;
+    }
+
+    public long getKeyPairId() {
+        return keyPairId;
+    }
+
+    public String getKeyPairUuid() {
+        return keyPairUuid;
     }
 
     public boolean isLimitCpuUse() {

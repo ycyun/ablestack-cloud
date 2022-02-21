@@ -456,6 +456,7 @@ SELECT
     `host`.`id` AS `host_id`,
     `host`.`uuid` AS `host_uuid`,
     `host`.`name` AS `host_name`,
+    `host`.`cluster_id` AS `cluster_id`,
     `vm_template`.`id` AS `template_id`,
     `vm_template`.`uuid` AS `template_uuid`,
     `vm_template`.`name` AS `template_name`,
@@ -726,17 +727,6 @@ CREATE TABLE `cloud`.`resource_icon` (
 
 ALTER TABLE `cloud`.`annotations` ADD COLUMN `admins_only` tinyint(1) unsigned NOT NULL DEFAULT 1;
 
--- Allow annotations for resource admins, domain admins and users
-INSERT INTO `cloud`.`role_permissions` (uuid, role_id, rule, permission) VALUES (UUID(), 2, 'listAnnotations', 'ALLOW');
-INSERT INTO `cloud`.`role_permissions` (uuid, role_id, rule, permission) VALUES (UUID(), 2, 'addAnnotation', 'ALLOW');
-INSERT INTO `cloud`.`role_permissions` (uuid, role_id, rule, permission) VALUES (UUID(), 2, 'removeAnnotation', 'ALLOW');
-INSERT INTO `cloud`.`role_permissions` (uuid, role_id, rule, permission) VALUES (UUID(), 3, 'listAnnotations', 'ALLOW');
-INSERT INTO `cloud`.`role_permissions` (uuid, role_id, rule, permission) VALUES (UUID(), 3, 'addAnnotation', 'ALLOW');
-INSERT INTO `cloud`.`role_permissions` (uuid, role_id, rule, permission) VALUES (UUID(), 3, 'removeAnnotation', 'ALLOW');
-INSERT INTO `cloud`.`role_permissions` (uuid, role_id, rule, permission) VALUES (UUID(), 4, 'listAnnotations', 'ALLOW');
-INSERT INTO `cloud`.`role_permissions` (uuid, role_id, rule, permission) VALUES (UUID(), 4, 'addAnnotation', 'ALLOW');
-INSERT INTO `cloud`.`role_permissions` (uuid, role_id, rule, permission) VALUES (UUID(), 4, 'removeAnnotation', 'ALLOW');
-
 -- Add uuid for ssh keypairs
 ALTER TABLE `cloud`.`ssh_keypairs` ADD COLUMN `uuid` varchar(40) AFTER `id`;
 
@@ -804,6 +794,3 @@ ALTER TABLE cloud.user_vm_details MODIFY value varchar(5120) NOT NULL;
 ALTER TABLE cloud_usage.usage_network DROP PRIMARY KEY, ADD PRIMARY KEY (`account_id`,`zone_id`,`host_id`,`network_id`,`event_time_millis`);
 ALTER TABLE `cloud`.`user_statistics` DROP INDEX `account_id`, ADD UNIQUE KEY `account_id`  (`account_id`,`data_center_id`,`public_ip_address`,`device_id`,`device_type`, `network_id`);
 ALTER TABLE `cloud_usage`.`user_statistics` DROP INDEX `account_id`, ADD UNIQUE KEY `account_id`  (`account_id`,`data_center_id`,`public_ip_address`,`device_id`,`device_type`, `network_id`);
-
-ALTER TABLE `cloud`.`vm_work_job` ADD COLUMN `secondary_object` char(100) COMMENT 'any additional item that must be checked during queueing' AFTER `vm_instance_id`;
-ALTER TABLE cloud.vm_work_job ADD CONSTRAINT vm_work_job_step_and_objects UNIQUE KEY (step,vm_instance_id,secondary_object);

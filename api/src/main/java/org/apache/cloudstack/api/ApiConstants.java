@@ -112,12 +112,15 @@ public class ApiConstants {
     public static final String DISK = "disk";
     public static final String DISK_OFFERING_ID = "diskofferingid";
     public static final String NEW_DISK_OFFERING_ID = "newdiskofferingid";
+    public static final String OVERRIDE_DISK_OFFERING_ID = "overridediskofferingid";
     public static final String DISK_KBS_READ = "diskkbsread";
     public static final String DISK_KBS_WRITE = "diskkbswrite";
     public static final String DISK_IO_READ = "diskioread";
     public static final String DISK_IO_WRITE = "diskiowrite";
     public static final String DISK_IO_PSTOTAL = "diskiopstotal";
     public static final String DISK_SIZE = "disksize";
+    public static final String DISK_SIZE_STRICTNESS = "disksizestrictness";
+    public static final String DISK_OFFERING_STRICTNESS = "diskofferingstrictness";
     public static final String DOWNLOAD_DETAILS = "downloaddetails";
     public static final String UTILIZATION = "utilization";
     public static final String DRIVER = "driver";
@@ -438,6 +441,7 @@ public class ApiConstants {
     public static final String NETWORKRATE = "networkrate";
     public static final String HOST_TAGS = "hosttags";
     public static final String SSH_KEYPAIR = "keypair";
+    public static final String SSH_KEYPAIR_ID = "keypairid";
     public static final String HTTPMETHOD = "httpmethod";
     public static final String HOST_CPU_CAPACITY = "hostcpucapacity";
     public static final String HOST_CPU_NUM = "hostcpunum";
@@ -589,7 +593,9 @@ public class ApiConstants {
     public static final String LIVE_MIGRATE = "livemigrate";
     public static final String MIGRATE_ALLOWED = "migrateallowed";
     public static final String MIGRATE_TO = "migrateto";
+    public static final String AUTO_MIGRATE = "automigrate";
     public static final String GUID = "guid";
+    public static final String VM_SNAPSHOT_ENABELD = "vmsnapshotenabled";
     public static final String VSWITCH_TYPE_GUEST_TRAFFIC = "guestvswitchtype";
     public static final String VSWITCH_TYPE_PUBLIC_TRAFFIC = "publicvswitchtype";
     public static final String VSWITCH_NAME_GUEST_TRAFFIC = "guestvswitchname";
@@ -714,6 +720,7 @@ public class ApiConstants {
     public static final String VM_SNAPSHOT_MEMORY = "snapshotmemory";
     public static final String VM_SNAPSHOT_QUIESCEVM = "quiescevm";
     public static final String IMAGE_STORE_UUID = "imagestoreuuid";
+    public static final String IMAGE_STORE_ID = "imagestoreid";
     public static final String GUEST_VM_CIDR = "guestvmcidr";
     public static final String NETWORK_CIDR = "networkcidr";
     public static final String RESERVED_IP_RANGE = "reservediprange";
@@ -855,11 +862,14 @@ public class ApiConstants {
     public static final String DESKTOP_CONTROLLER_VERSION_WORKS_URL = "worksurl";
     public static final String DESKTOP_CONTROLLER_VERSION_DC_OSTYPE = "dcostype";
     public static final String DESKTOP_CONTROLLER_VERSION_WORKS_OSTYPE = "worksostype";
+    public static final String DESKTOP_CONTROLLER_VERSION_UPLOADTYPE = "controlleruploadtype";
     public static final String DESKTOP_TEMPLATE_STATE = "templatestate";
     public static final String DESKTOP_AD_DOMAIN_NAME = "addomainname";
     public static final String DESKTOP_TEMPLATES = "templates";
     public static final String DESKTOP_DC_TEMPLATE = "dctemplate";
     public static final String DESKTOP_WORKS_TEMPLATE = "workstemplate";
+    public static final String DESKTOP_DC_TEMPLATE_ID = "dctemplateid";
+    public static final String DESKTOP_WORKS_TEMPLATE_ID = "workstemplateid";
     public static final String DESKTOP_TEMPLATE_OS_TYPE = "templateostype";
     public static final String DESKTOP_CLUSTER_ID = "desktopclusterid";
     public static final String DESKTOP_CLUSTER_NAME = "desktopclustername";
@@ -874,6 +884,11 @@ public class ApiConstants {
     public static final String DESKTOP_DC_VM_IP = "dcvmip";
     public static final String DESKTOP_MASTER_TEMPLATE_TYPE = "mastertemplatetype";
     public static final String DESKTOP_CHECK = "isdesktop";
+    // public static final String DESKTOP_PASSWORD = "desktoppassword";
+    public static final String DESKTOP_CLUSTER_TYPE = "clustertype";
+    public static final String DESKTOP_CONTROLLER_DC_IP = "dcip";
+    public static final String DESKTOP_CONTROLLER_WORKS_IP = "worksip";
+
 
     public static final String BOOT_TYPE = "boottype";
     public static final String BOOT_MODE = "bootmode";

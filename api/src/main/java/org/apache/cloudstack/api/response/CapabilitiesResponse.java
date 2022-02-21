@@ -104,17 +104,25 @@ public class CapabilitiesResponse extends BaseResponse {
     @Param(description = "true if Desktop Service plugin is enabled, false otherwise")
     private boolean desktopServiceEnabled;
 
-    @SerializedName("desktopworksportalport")
-    @Param(description = "Desktop Service Works Portal URL setting")
-    private String desktopWorksPortalPort;
+    @SerializedName("desktopworksadminportalport")
+    @Param(description = "Desktop Service Works Admin Portal URL setting")
+    private String desktopWorksAdminPortalPort;
 
-    @SerializedName("wallportaldashboardurl")
-    @Param(description = "Monitoring Service Wall Portal Dashboard URL setting")
-    private String wallPortalDashboardUrl;
+    @SerializedName("desktopworksuserportalport")
+    @Param(description = "Desktop Service Works User Portal URL setting")
+    private String desktopWorksUserPortalPort;
 
-    @SerializedName("wallportalvmurl")
-    @Param(description = "Monitoring Service Wall Portal for VM URL setting")
-    private String wallPortalVmUrl;
+    @SerializedName("wallportalport")
+    @Param(description = "Monitoring Service Wall Portal Port setting")
+    private String wallPortalPort;
+
+    @SerializedName("wallportalvmuri")
+    @Param(description = "Monitoring Service Wall Portal for VM Uri setting")
+    private String wallPortalVmUri;
+
+    @SerializedName("host")
+    @Param(description = "Management Server Host Ip")
+    private String host;
 
     @SerializedName("defaultuipagesize")
     @Param(description = "default page size in the UI for various views, value set in the configurations", since = "4.15.2")
@@ -200,18 +208,25 @@ public class CapabilitiesResponse extends BaseResponse {
         this.desktopServiceEnabled = desktopServiceEnabled;
     }
 
-    public void setDesktopWorksPortalPort(String desktopWorksPortalPort) {
-        this.desktopWorksPortalPort = desktopWorksPortalPort;
+    public void setDesktopWorksAdminPortalPort(String desktopWorksAdminPortalPort) {
+        this.desktopWorksAdminPortalPort = desktopWorksAdminPortalPort;
     }
 
-    public void setWallPortalDashboardUrl(String wallPortalDashboardUrl) {
-        this.wallPortalDashboardUrl = wallPortalDashboardUrl;
+    public void setDesktopWorksUserPortalPort(String desktopWorksUserPortalPort) {
+        this.desktopWorksUserPortalPort = desktopWorksUserPortalPort;
     }
 
-    public void setWallPortalVmUrl(String wallPortalVmUrl) {
-        this.wallPortalVmUrl = wallPortalVmUrl;
+    public void setWallPortalPort(String wallPortalPort) {
+        this.wallPortalPort = wallPortalPort;
     }
 
+    public void setWallPortalVmUri(String wallPortalVmUri) {
+        this.wallPortalVmUri = wallPortalVmUri;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
     public void setDefaultUiPageSize(Long defaultUiPageSize) {
         this.defaultUiPageSize = defaultUiPageSize;
     }

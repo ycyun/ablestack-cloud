@@ -216,7 +216,7 @@ public class HypervisorTemplateAdapter extends TemplateAdapterBase {
     public TemplateProfile prepare(RegisterTemplateCmd cmd) throws ResourceAllocationException {
         TemplateProfile profile = super.prepare(cmd);
         String url = profile.getUrl();
-        UriUtils.validateUrl(cmd.getFormat(), url);
+        UriUtils.validateUrl(cmd.getFormat(), url, cmd.isDirectDownload());
         if (cmd.isDirectDownload()) {
             DigestHelper.validateChecksumString(cmd.getChecksum());
             Long templateSize = performDirectDownloadUrlValidation(cmd.getFormat(), url, cmd.getZoneIds());
@@ -668,7 +668,7 @@ public class HypervisorTemplateAdapter extends TemplateAdapterBase {
     public TemplateProfile prepareDelete(DeleteTemplateCmd cmd) {
         TemplateProfile profile = super.prepareDelete(cmd);
         VMTemplateVO template = profile.getTemplate();
-        if (!cmd.isDesktop() && template.getTemplateType() == TemplateType.SYSTEM) {
+        if (template.getTemplateType() == TemplateType.SYSTEM) {
             throw new InvalidParameterValueException("The DomR template cannot be deleted.");
         }
         checkZoneImageStores(profile.getZoneIdList());

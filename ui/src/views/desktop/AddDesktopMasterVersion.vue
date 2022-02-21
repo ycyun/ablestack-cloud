@@ -80,7 +80,7 @@
                 </span>
                 <a-radio-group
                   v-decorator="['mastertemplatetype', {
-                    initialValue: this.uploadType,
+                    initialValue: this.masterTemplateType,
                     rules: [{ required: true, message: $t('message.error.select') }]
                   }]"
                   buttonStyle="solid">
@@ -112,11 +112,11 @@
                   }]"
                   buttonStyle="solid"
                   @change="selected => { this.handleUploadTypeChange(selected.target.value) }">
-                  <a-radio-button value="url">
-                    {{ $t('label.url') }}
-                  </a-radio-button>
                   <a-radio-button value="template">
                     {{ $t('label.templatename') }}
+                  </a-radio-button>
+                  <a-radio-button value="url">
+                    {{ $t('label.url') }}
                   </a-radio-button>
                 </a-radio-group>
               </a-form-item>
@@ -338,8 +338,8 @@ export default {
       format: {},
       template: {},
       osTypes: {},
-      masterTemplateType: 'desktop',
-      uploadType: 'url',
+      masterTemplateType: 'DESKTOP',
+      uploadType: 'template',
       defaultOsType: '',
       defaultOsId: null,
       xenServerProvider: false,

@@ -38,12 +38,12 @@ import com.cloud.desktop.cluster.DesktopClusterService;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 @APICommand(name = DeleteDesktopClusterIpRangeCmd.APINAME,
-        description = "Add a Desktop Cluster Ip Range",
+        description = "Delete a Desktop Cluster Ip Range",
         responseObject = SuccessResponse.class,
         entityType = {DesktopClusterIpRange.class},
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class DeleteDesktopClusterIpRangeCmd extends BaseAsyncCmd {
-    public static final Logger LOGGER = Logger.getLogger(AddDesktopClusterIpRangeCmd.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(DeleteDesktopClusterIpRangeCmd.class.getName());
     public static final String APINAME = "deleteDesktopClusterIpRanges";
 
     @Inject
