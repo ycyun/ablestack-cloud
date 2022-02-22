@@ -105,6 +105,7 @@ if __name__ == '__main__':
     parser.add_option("--pubNic", dest="pubNic", help="Public traffic interface")
     parser.add_option("--prvNic", dest="prvNic", help="Private traffic interface")
     parser.add_option("--guestNic", dest="guestNic", help="Guest traffic interface")
+    parser.add_option("--cpumode", action="store_true", default=False, dest="cpumode", help="Host CPU model passthrough")
 
     old_config = configFileOps("@AGENTSYSCONFDIR@/agent.properties")
     bridgeType = old_config.getEntry("network.bridge.type").lower()
@@ -148,6 +149,7 @@ if __name__ == '__main__':
         glbEnv.nics.append(options.guestNic)
 
     glbEnv.secure = options.secure
+    glbEnv.cpumode = options.cpumode
 
     print("Starting to configure your system:")
     syscfg = sysConfigFactory.getSysConfigFactory(glbEnv)
