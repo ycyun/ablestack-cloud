@@ -851,6 +851,8 @@ class cloudAgentConfig(serviceCfgBase):
                 cfo.addEntry("local.storage.uuid", str(bash("uuidgen").getStdout()))
             if cfo.getEntry("resource") == "":
                 cfo.addEntry("resource", "com.cloud.hypervisor.kvm.resource.LibvirtComputingResource")
+            if cfo.getEntry("guest.cpu.mode") == "":
+                cfo.addEntry("guest.cpu.mode", "host-passthrough")
             cfo.save()
 
             self.syscfg.svo.stopService("cloudstack-agent")
