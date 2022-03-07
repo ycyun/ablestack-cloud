@@ -173,7 +173,8 @@ guid=
 dflag=
 pubNic=
 prvNic=
-while getopts 'h:z:p:u:c:P:N:d' OPTION
+cpumode=
+while getopts 'h:z:p:u:c:P:N:dC' OPTION
 do
   case $OPTION in
   h) 
@@ -199,7 +200,10 @@ do
         ;;
   N)    
 	prvNic="$OPTARG"
-	;;
+	      ;;
+  C)
+	cpumode=1
+        ;;
   *)    ;;
   esac
 done
@@ -215,6 +219,11 @@ fi
 if [ -n "$prvNic" ]
 then
    paramters=" --prvNic=$prvNic $paramters"
+fi
+
+if [ $cpumode -eq 1 ]
+then
+   paramters=" --cpumode $paramters"
 fi
 
 selenabled=`cat /selinux/enforce`
