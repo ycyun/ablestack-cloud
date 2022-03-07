@@ -1647,7 +1647,7 @@
     "label.ping.dir": "PING 디렉토리",
     "label.ping.path": "PING 경로",
     "label.ping.storage.ip": "PING 대상 스토리지 IP 주소",
-    "label.pkcs.private.certificate": "PKCS#8 사설 인증서",
+    "label.pkcs.private.certificate": "비밀키",
     "label.plannermode": "플래너 모드",
     "label.please.complete.the.following.fields": "다음 필드를 작성하십시오.",
     "label.please.specify.netscaler.info": "Netscaler 정보를 지정해 주십시오.",
