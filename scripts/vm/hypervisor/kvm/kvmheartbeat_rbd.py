@@ -40,6 +40,7 @@ def create_cephKeyring():
 	if not os.path.exists(keyringFolder):
 		os.makedirs(keyringFolder)
 
+	delete_cephKeyring()
 	if not os.path.isfile(keyringFolder+'/'+keyringFile):
 		f=open(keyringFolder+'/'+keyringFile,'w')
 		f.write('[client.'+args.n+']\n key='+args.s+'\n')
@@ -108,8 +109,8 @@ if __name__ == '__main__':
 	else:
 		rs = watcher_list()
 		if rs == 2:
-			os.system('echo =====> ALIVE <=====')
+			os.system('echo "=====> ALIVE <====="')
 		else:
-			os.system('echo =====> Considering host as DEAD due to [hb-$HostIP] watcher that the host is seeing is not running. <======')
+			os.system('echo "=====> Considering host as DEAD due to [hb-' + args.v + '] watcher that the host is seeing is not running. <======"')
 
 	delete_cephKeyring()
