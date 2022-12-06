@@ -45,6 +45,7 @@ import com.cloud.resource.CommandWrapper;
 import com.cloud.resource.ResourceWrapper;
 import com.cloud.storage.Storage.StoragePoolType;
 import com.cloud.utils.script.Script;
+import org.springframework.util.DigestUtils;
 
 @ResourceWrapper(handles =  ManageSnapshotCommand.class)
 public final class LibvirtManageSnapshotCommandWrapper extends CommandWrapper<ManageSnapshotCommand, Answer, LibvirtComputingResource> {
@@ -157,6 +158,12 @@ public final class LibvirtManageSnapshotCommandWrapper extends CommandWrapper<Ma
                     if (result != null) {
                         s_logger.debug("Failed to manage snapshot: " + result);
                         return new ManageSnapshotAnswer(command, false, "Failed to manage snapshot: " + result);
+                    }else{
+                        if (primaryPool.getType() == StoragePoolType.CLVM){
+                            final String snapshotHex = DigestUtils.md5DigestAsHex(snapshotName.getBytes());
+                            s_logger.debug("Manage snapshot hex from java: " + snapshotHex);
+                            return new ManageSnapshotAnswer(command, command.getSnapshotId(), disk.getPool().getLocalPath() + File.separator +  snapshotHex + "-cow", true, null);
+                        }
                     }
                 }
             }
