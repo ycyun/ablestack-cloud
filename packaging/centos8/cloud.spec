@@ -210,8 +210,8 @@ if [ "%{?_localfast}" == "1" ]; then
 fi
 
 mvn -T 2C -Psystemvm,developer -DskipTests $FLAGS clean package
-# cd ui && npm install && node build.js && npm run build && cd ..
-cd ui && npm install && node build.js && npm run build && cd ..
+# Use npm ci in CI/package builds so the UI install is lockfile-driven and reproducible.
+cd ui && npm ci && node build.js && npm run build && cd ..
 
 %install
 [ ${RPM_BUILD_ROOT} != "/" ] && rm -rf ${RPM_BUILD_ROOT}

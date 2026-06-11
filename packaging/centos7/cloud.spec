@@ -233,7 +233,8 @@ if [ \"%{_temp}\" != "" ]; then
 fi
 
 mvn -Psystemvm,developer $FLAGS clean package
-cd ui && npm install && npm run build && cd ..
+# Use npm ci in CI/package builds so the UI install is lockfile-driven and reproducible.
+cd ui && npm ci && npm run build && cd ..
 
 %install
 [ ${RPM_BUILD_ROOT} != "/" ] && rm -rf ${RPM_BUILD_ROOT}

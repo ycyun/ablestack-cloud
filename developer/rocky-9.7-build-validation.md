@@ -64,7 +64,7 @@ This path is preferred because:
 The workflow downloads the official Rocky Linux 9.7 container archive and verifies its checksum before running the build.
 
 - Archive:
-  - `https://download.rockylinux.org/pub/rocky/9.7/images/x86_64/Rocky-9-Container-Base.latest.x86_64.tar.xz`
+  - `https://dl.rockylinux.org/vault/rocky/9.7/images/x86_64/Rocky-9-Container-Base.latest.x86_64.tar.xz`
 - SHA256:
   - `2213bb44c0f1bfd0bbef16118ab5a1ec6875362c5ad6c6dafdecf28d14151ad2`
 
@@ -72,6 +72,7 @@ The workflow downloads the official Rocky Linux 9.7 container archive and verifi
 
 - `packaging/package.sh` now accepts `rocky9` as a distribution alias.
 - The alias currently reuses the existing `centos8` spec assets.
+- The build helper rewrites Rocky repo entries to the Rocky 9.7 vault before the first `dnf install`, so `dnf` does not follow stale mirrorlist entries.
 - This keeps the Rocky 9.7 packaging path explicit without duplicating the spec tree before a dedicated Rocky 9 spec is needed.
 
 ## Node and Java Handling

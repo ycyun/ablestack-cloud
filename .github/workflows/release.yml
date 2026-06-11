@@ -104,7 +104,8 @@ jobs:
       package_version: ${{ steps.derive.outputs.package_version }}
       timestamp_value: ${{ steps.derive.outputs.timestamp_value }}
       source_artifact_name: ${{ steps.derive.outputs.source_artifact_name }}
-      rpm_artifact_name: ${{ steps.derive.outputs.rpm_artifact_name }}
+      rpm_artifact_name97: ${{ steps.derive.outputs.rpm_artifact_name }}
+      rpm_artifact_name98: ${{ steps.derive.outputs.rpm_artifact_name }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -146,7 +147,8 @@ jobs:
             echo "package_version=$package_version"
             echo "timestamp_value=$timestamp_value"
             echo "source_artifact_name=source-release-${{ inputs.release_id }}"
-            echo "rpm_artifact_name=rocky97-rpm-${{ inputs.release_id }}"
+            echo "rpm_artifact_name97=rocky97-rpm-${{ inputs.release_id }}"
+            echo "rpm_artifact_name98=rocky98-rpm-${{ inputs.release_id }}"
           } >> "$GITHUB_OUTPUT"
 
   prepare-source-release:
@@ -253,7 +255,7 @@ jobs:
     with:
       ref: ${{ needs.prepare-source-release.outputs.source_commit_sha }}
 
-  build-rpm:
+  build-rpm97:
     needs:
       - metadata
       - prepare-source-release
@@ -272,13 +274,36 @@ jobs:
       build_srpm: true
       templates: ${{ inputs.templates }}
       node_version: ${{ inputs.node_version }}
-      artifact_name: ${{ needs.metadata.outputs.rpm_artifact_name }}
+      artifact_name: ${{ needs.metadata.outputs.rpm_artifact_name97 }}
 
+  build-rpm98:
+    needs:
+      - metadata
+      - prepare-source-release
+      - validate-build
+      - validate-ui
+    uses: ./.github/workflows/rocky98-rpm.yml
+    with:
+      ref: ${{ needs.prepare-source-release.outputs.source_commit_sha }}
+      pack: ${{ inputs.pack }}
+      simulator: ${{ inputs.simulator }}
+      release: ${{ inputs.release_seq }}
+      brand: ${{ needs.metadata.outputs.brand }}
+      package_version: ${{ needs.metadata.outputs.package_version }}
+      use_timestamp: true
+      timestamp_value: ${{ needs.metadata.outputs.timestamp_value }}
+      build_srpm: true
+      templates: ${{ inputs.templates }}
+      node_version: ${{ inputs.node_version }}
+      artifact_name: ${{ needs.metadata.outputs.rpm_artifact_name98 }}
+
+    
   publish-release:
     needs:
       - metadata
       - prepare-source-release
-      - build-rpm
+      - build-rpm97
+      - build-rpm98
     runs-on: ubuntu-24.04
     steps:
       - name: Download source release artifacts
@@ -287,10 +312,16 @@ jobs:
           name: ${{ needs.metadata.outputs.source_artifact_name }}
           path: download/source
 
-      - name: Download RPM artifacts
+      - name: Download 9.7 RPM artifacts
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.metadata.outputs.rpm_artifact_name }}
+          name: ${{ needs.metadata.outputs.rpm_artifact_name97 }}
+          path: download/rpm
+
+      - name: Download 9.8 RPM artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.metadata.outputs.rpm_artifact_name98 }}
           path: download/rpm
 
       - name: Assemble GitHub Release assets
