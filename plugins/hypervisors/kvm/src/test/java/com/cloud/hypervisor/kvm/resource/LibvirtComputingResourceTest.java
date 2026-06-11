@@ -7153,6 +7153,136 @@ public class LibvirtComputingResourceTest {
     }
 
     @Test
+    public void testParseGpuDevicesFromResult_withA100ProcessingAcceleratorsAndMixedDomainBdf() {
+        String result = "{\"gpus\": ["
+                        + "    {"
+                        + "      \"pci_address\": \"0001:41:00.0\","
+                        + "      \"vendor_id\": \"10de\","
+                        + "      \"device_id\": \"20B0\","
+                        + "      \"vendor\": \"NVIDIA Corporation\","
+                        + "      \"device\": \"A100-PCIe-40GB\","
+                        + "      \"driver\": \"nvidia\","
+                        + "      \"pci_class\": \"Processing accelerators [1200]\","
+                        + "      \"iommu_group\": \"42\","
+                        + "      \"pci_root\": \"0001:41:00.0\","
+                        + "      \"numa_node\": \"0\","
+                        + "      \"sriov_totalvfs\": 0,"
+                        + "      \"sriov_numvfs\": 0,"
+                        + "      \"max_instances\": 7,"
+                        + "      \"video_ram\": 16384,"
+                        + "      \"max_heads\": 1,"
+                        + "      \"max_resolution_x\": 4096,"
+                        + "      \"max_resolution_y\": 2160,"
+                        + "      \"full_passthrough\": {"
+                        + "        \"enabled\": 1,"
+                        + "        \"libvirt_address\": {"
+                        + "          \"domain\": \"0x0001\","
+                        + "          \"bus\": \"0x41\","
+                        + "          \"slot\": \"0x00\","
+                        + "          \"function\": \"0x0\""
+                        + "        },"
+                        + "        \"used_by_vm\": null"
+                        + "      },"
+                        + "      \"vgpu_instances\": [],"
+                        + "      \"vf_instances\": []"
+                        + "    },"
+                        + "    {"
+                        + "      \"pci_address\": \"0001:65:00.0\","
+                        + "      \"vendor_id\": \"10de\","
+                        + "      \"device_id\": \"20B0\","
+                        + "      \"vendor\": \"NVIDIA Corporation\","
+                        + "      \"device\": \"A100-PCIe-40GB\","
+                        + "      \"driver\": \"nvidia\","
+                        + "      \"pci_class\": \"Processing accelerators [1200]\","
+                        + "      \"iommu_group\": \"43\","
+                        + "      \"pci_root\": \"0001:65:00.0\","
+                        + "      \"numa_node\": \"0\","
+                        + "      \"sriov_totalvfs\": 7,"
+                        + "      \"sriov_numvfs\": 7,"
+                        + "      \"max_instances\": 7,"
+                        + "      \"video_ram\": 16384,"
+                        + "      \"max_heads\": 1,"
+                        + "      \"max_resolution_x\": 4096,"
+                        + "      \"max_resolution_y\": 2160,"
+                        + "      \"full_passthrough\": {"
+                        + "        \"enabled\": 0,"
+                        + "        \"libvirt_address\": {"
+                        + "          \"domain\": \"0x0001\","
+                        + "          \"bus\": \"0x65\","
+                        + "          \"slot\": \"0x00\","
+                        + "          \"function\": \"0x0\""
+                        + "        },"
+                        + "        \"used_by_vm\": null"
+                        + "      },"
+                        + "      \"vgpu_instances\": ["
+                        + "        {"
+                        + "          \"mdev_uuid\": \"c1d2e3f4-1111-4a4a-aaaa-000000000001\","
+                        + "          \"profile_name\": \"grid_a100-1g.5gb\","
+                        + "          \"max_instances\": 7,"
+                        + "          \"video_ram\": 5120,"
+                        + "          \"max_heads\": 1,"
+                        + "          \"max_resolution_x\": 4096,"
+                        + "          \"max_resolution_y\": 2160,"
+                        + "          \"libvirt_address\": {"
+                        + "            \"domain\": \"0x0001\","
+                        + "            \"bus\": \"0x65\","
+                        + "            \"slot\": \"0x00\","
+                        + "            \"function\": \"0x0\""
+                        + "          },"
+                        + "          \"used_by_vm\": \"ml-vm\""
+                        + "        }"
+                        + "      ],"
+                        + "      \"vf_instances\": ["
+                        + "        {"
+                        + "          \"vf_pci_address\": \"0001:65:00.2\","
+                        + "          \"vf_profile\": \"1g.5gb\","
+                        + "          \"max_instances\": 1,"
+                        + "          \"video_ram\": 5120,"
+                        + "          \"max_heads\": 1,"
+                        + "          \"max_resolution_x\": 4096,"
+                        + "          \"max_resolution_y\": 2160,"
+                        + "          \"libvirt_address\": {"
+                        + "            \"domain\": \"0x0001\","
+                        + "            \"bus\": \"0x65\","
+                        + "            \"slot\": \"0x00\","
+                        + "            \"function\": \"0x2\""
+                        + "          },"
+                        + "          \"used_by_vm\": null"
+                        + "        }"
+                        + "      ]"
+                        + "    }"
+                        + "  ]"
+                        + "}";
+
+        List<VgpuTypesInfo> gpuDevices = libvirtComputingResourceSpy.parseGpuDevicesFromResult(result);
+        assertEquals(4, gpuDevices.size());
+
+        VgpuTypesInfo pfOnlyA100 = gpuDevices.get(0);
+        assertEquals("0001:41:00.0", pfOnlyA100.getBusAddress());
+        assertEquals("passthrough", pfOnlyA100.getModelName());
+        assertTrue(pfOnlyA100.isPassthroughEnabled());
+        assertNull(pfOnlyA100.getVmName());
+
+        VgpuTypesInfo activeA100 = gpuDevices.get(1);
+        assertEquals("0001:65:00.0", activeA100.getBusAddress());
+        assertEquals("passthrough", activeA100.getModelName());
+        assertFalse(activeA100.isPassthroughEnabled());
+        assertNull(activeA100.getVmName());
+
+        VgpuTypesInfo a100Vgpu = gpuDevices.get(2);
+        assertEquals("c1d2e3f4-1111-4a4a-aaaa-000000000001", a100Vgpu.getBusAddress());
+        assertEquals("0001:65:00.0", a100Vgpu.getParentBusAddress());
+        assertEquals("grid_a100-1g.5gb", a100Vgpu.getModelName());
+        assertEquals("ml-vm", a100Vgpu.getVmName());
+
+        VgpuTypesInfo a100Vf = gpuDevices.get(3);
+        assertEquals("0001:65:00.2", a100Vf.getBusAddress());
+        assertEquals("0001:65:00.0", a100Vf.getParentBusAddress());
+        assertEquals("1g.5gb", a100Vf.getModelName());
+        assertNull(a100Vf.getVmName());
+    }
+
+    @Test
     public void parseCpuFeaturesTestReturnEmptyListWhenFeaturesIsNull() {
         List<String> cpuFeatures = libvirtComputingResourceSpy.parseCpuFeatures(null);
         Assert.assertEquals(0, cpuFeatures.size());

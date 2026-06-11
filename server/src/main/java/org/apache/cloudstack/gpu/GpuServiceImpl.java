@@ -92,6 +92,8 @@ import java.util.stream.Collectors;
 @Component
 public class GpuServiceImpl extends ManagerBase implements GpuService, PluggableService, Configurable {
 
+    private static final String PASSTHROUGH_PROFILE_NAME = "passthrough";
+
     @Inject
     private GpuCardDao gpuCardDao;
 
@@ -178,7 +180,8 @@ public class GpuServiceImpl extends ManagerBase implements GpuService, Pluggable
         gpuCard = gpuCardDao.persist(gpuCard);
 
         // Create passthrough vGPU profile with optional display parameters
-        VgpuProfileVO passthroughProfile = new VgpuProfileVO("passthrough", "passthrough", gpuCard.getId(), 1L);
+        VgpuProfileVO passthroughProfile = new VgpuProfileVO(PASSTHROUGH_PROFILE_NAME, PASSTHROUGH_PROFILE_NAME,
+                gpuCard.getId(), 1L);
         passthroughProfile.setVideoRam(videoRam);
         vgpuProfileDao.persist(passthroughProfile);
 
@@ -977,14 +980,15 @@ public class GpuServiceImpl extends ManagerBase implements GpuService, Pluggable
                 card = gpuCardDao.persist(card);
 
                 // Create default passthrough profile for the new card
-                VgpuProfileVO passthroughProfile = new VgpuProfileVO("passthrough", "passthrough", card.getId(), 1L);
+                VgpuProfileVO passthroughProfile = new VgpuProfileVO(PASSTHROUGH_PROFILE_NAME, PASSTHROUGH_PROFILE_NAME,
+                        card.getId(), 1L);
                 passthroughProfile.setVideoRam(deviceInfo.getVideoRam());
                 passthroughProfile.setMaxResolutionX(deviceInfo.getMaxResolutionX());
                 passthroughProfile.setMaxResolutionY(deviceInfo.getMaxResolutionY());
                 passthroughProfile.setMaxHeads(deviceInfo.getMaxHeads());
                 passthroughProfile = vgpuProfileDao.persist(passthroughProfile);
 
-                String vgpuProfileKey = card.getUuid() + " | " + deviceInfo.getModelName();
+                String vgpuProfileKey = card.getUuid() + " | " + PASSTHROUGH_PROFILE_NAME;
                 vgpuProfileMap.put(vgpuProfileKey, passthroughProfile);
                 logger.info("Created GPU card: {} with passthrough profile: {}", card, passthroughProfile);
             }

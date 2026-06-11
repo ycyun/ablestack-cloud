@@ -60,6 +60,7 @@ import org.apache.cloudstack.api.response.GpuCardResponse;
 import org.apache.cloudstack.api.response.GpuDeviceResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.VgpuProfileResponse;
+import org.mockito.ArgumentCaptor;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -125,6 +126,9 @@ public class GpuServiceImplTest {
     private static final String UPDATED_GPU_CARD_NAME = "Updated NVIDIA RTX 4090";
     private static final String UPDATED_GPU_VENDOR_NAME = "Updated NVIDIA";
     private static final String PASSTHROUGH_PROFILE = "passthrough";
+    private static final String A100_GPU_CARD_NAME = "NVIDIA Corporation A100-SXM4-40GB";
+    private static final String A100_MIG_PROFILE_NAME = "grid_a100-1g.5gb";
+    private static final String A100_VF_PROFILE_NAME = "1g.5gb";
     private static final String COMMAND_CREATE_VGPU_PROFILE = "createVgpuProfile";
     private static final String COMMAND_UPDATE_VGPU_PROFILE = "updateVgpuProfile";
     private static final String COMMAND_LIST_GPU_CARDS = "listGpuCards";
@@ -893,6 +897,112 @@ public class GpuServiceImplTest {
             verify(vmInstanceDao).findVMByInstanceName(VM_NAME);
             verify(gpuDeviceDao).persist(any(GpuDeviceVO.class));
         }
+    }
+
+    @Test
+    public void testAddGpuDevicesToHost_CreatesDynamicProfileForNewA100Card() {
+        VgpuTypesInfo deviceInfo = mock(VgpuTypesInfo.class);
+        when(deviceInfo.getBusAddress()).thenReturn("0001:65:00.2");
+        when(deviceInfo.getDeviceId()).thenReturn("20B0");
+        when(deviceInfo.getVendorId()).thenReturn(GPU_VENDOR_ID);
+        when(deviceInfo.getDeviceName()).thenReturn("A100-SXM4-40GB");
+        when(deviceInfo.getVendorName()).thenReturn(GPU_VENDOR_NAME);
+        when(deviceInfo.getModelName()).thenReturn(A100_MIG_PROFILE_NAME);
+        when(deviceInfo.getDeviceType()).thenReturn(GpuDevice.DeviceType.MDEV);
+        when(deviceInfo.getNumaNode()).thenReturn("0");
+        when(deviceInfo.getPciRoot()).thenReturn("0001:65:00.0");
+        when(deviceInfo.getVideoRam()).thenReturn(5120L);
+        when(deviceInfo.getMaxHeads()).thenReturn(1L);
+        when(deviceInfo.getMaxResolutionX()).thenReturn(4096L);
+        when(deviceInfo.getMaxResolutionY()).thenReturn(2160L);
+        when(deviceInfo.getMaxVpuPerGpu()).thenReturn(7L);
+
+        GpuCardVO a100GpuCard = mock(GpuCardVO.class);
+        when(a100GpuCard.getId()).thenReturn(GPU_CARD_ID);
+        when(a100GpuCard.getUuid()).thenReturn("a100-gpu-card-uuid");
+        when(a100GpuCard.getName()).thenReturn(A100_GPU_CARD_NAME);
+
+        VgpuProfileVO passthroughProfile = mock(VgpuProfileVO.class);
+
+        VgpuProfileVO migProfile = mock(VgpuProfileVO.class);
+        when(migProfile.getId()).thenReturn(2L);
+
+        List<VgpuTypesInfo> newDevices = List.of(deviceInfo);
+        when(gpuDeviceDao.listByHostId(HOST_ID)).thenReturn(new ArrayList<>());
+        when(gpuCardDao.findByVendorIdAndDeviceId(GPU_VENDOR_ID, "20B0")).thenReturn(null);
+        when(gpuCardDao.persist(any(GpuCardVO.class))).thenReturn(a100GpuCard);
+        when(vgpuProfileDao.persist(any(VgpuProfileVO.class))).thenReturn(passthroughProfile, migProfile);
+        when(vgpuProfileDao.findByNameAndCardId(A100_MIG_PROFILE_NAME, GPU_CARD_ID)).thenReturn(null);
+        when(gpuDeviceDao.persist(any(GpuDeviceVO.class))).thenReturn(mockGpuDevice);
+
+        try (MockedStatic<GlobalLock> ignored = Mockito.mockStatic(GlobalLock.class)) {
+            GlobalLock lock = mock(GlobalLock.class);
+            when(GlobalLock.getInternLock("add-gpu-devices-to-host-" + HOST_ID)).thenReturn(lock);
+            when(lock.lock(30)).thenReturn(true);
+
+            gpuService.addGpuDevicesToHost(mockHost, newDevices);
+
+            ArgumentCaptor<VgpuProfileVO> vgpuProfileCaptor = ArgumentCaptor.forClass(VgpuProfileVO.class);
+            verify(vgpuProfileDao, times(2)).persist(vgpuProfileCaptor.capture());
+            List<VgpuProfileVO> persistedProfiles = vgpuProfileCaptor.getAllValues();
+            assertEquals(PASSTHROUGH_PROFILE, persistedProfiles.get(0).getName());
+            assertEquals(A100_MIG_PROFILE_NAME, persistedProfiles.get(1).getName());
+            verify(gpuDeviceDao).persist(any(GpuDeviceVO.class));
+        }
+    }
+
+    @Test
+    public void testGetGpuGroupDetailsFromGpuDevicesOnHost_WithA100Profiles() {
+        GpuCardVO a100GpuCard = mock(GpuCardVO.class);
+        when(a100GpuCard.getName()).thenReturn(A100_GPU_CARD_NAME);
+
+        VgpuProfileVO passthroughProfile = mock(VgpuProfileVO.class);
+        when(passthroughProfile.getName()).thenReturn(PASSTHROUGH_PROFILE);
+
+        VgpuProfileVO migProfile = mock(VgpuProfileVO.class);
+        when(migProfile.getName()).thenReturn(A100_MIG_PROFILE_NAME);
+
+        VgpuProfileVO vfProfile = mock(VgpuProfileVO.class);
+        when(vfProfile.getName()).thenReturn(A100_VF_PROFILE_NAME);
+
+        GpuDeviceVO passthroughDevice = mock(GpuDeviceVO.class);
+        when(passthroughDevice.getCardId()).thenReturn(GPU_CARD_ID);
+        when(passthroughDevice.getVgpuProfileId()).thenReturn(1L);
+        when(passthroughDevice.getState()).thenReturn(GpuDevice.State.Free);
+        when(passthroughDevice.getManagedState()).thenReturn(GpuDevice.ManagedState.Managed);
+        when(passthroughDevice.getType()).thenReturn(GpuDevice.DeviceType.PCI);
+
+        GpuDeviceVO migDevice = mock(GpuDeviceVO.class);
+        when(migDevice.getCardId()).thenReturn(GPU_CARD_ID);
+        when(migDevice.getVgpuProfileId()).thenReturn(2L);
+        when(migDevice.getState()).thenReturn(GpuDevice.State.Allocated);
+        when(migDevice.getManagedState()).thenReturn(GpuDevice.ManagedState.Managed);
+        when(migDevice.getType()).thenReturn(GpuDevice.DeviceType.MDEV);
+
+        GpuDeviceVO vfDevice = mock(GpuDeviceVO.class);
+        when(vfDevice.getCardId()).thenReturn(GPU_CARD_ID);
+        when(vfDevice.getVgpuProfileId()).thenReturn(3L);
+        when(vfDevice.getState()).thenReturn(GpuDevice.State.Free);
+        when(vfDevice.getManagedState()).thenReturn(GpuDevice.ManagedState.Managed);
+        when(vfDevice.getType()).thenReturn(GpuDevice.DeviceType.PCI);
+
+        when(gpuDeviceDao.listByHostId(HOST_ID)).thenReturn(List.of(passthroughDevice, migDevice, vfDevice));
+        when(gpuCardDao.findById(GPU_CARD_ID)).thenReturn(a100GpuCard);
+        when(vgpuProfileDao.findById(1L)).thenReturn(passthroughProfile);
+        when(vgpuProfileDao.findById(2L)).thenReturn(migProfile);
+        when(vgpuProfileDao.findById(3L)).thenReturn(vfProfile);
+
+        HashMap<String, HashMap<String, VgpuTypesInfo>> result = gpuService.getGpuGroupDetailsFromGpuDevicesOnHost(HOST_ID);
+
+        assertNotNull(result);
+        assertTrue(result.containsKey(A100_GPU_CARD_NAME));
+        assertTrue(result.get(A100_GPU_CARD_NAME).containsKey(PASSTHROUGH_PROFILE));
+        assertTrue(result.get(A100_GPU_CARD_NAME).containsKey(A100_MIG_PROFILE_NAME));
+        assertTrue(result.get(A100_GPU_CARD_NAME).containsKey(A100_VF_PROFILE_NAME));
+        assertEquals(Long.valueOf(1), result.get(A100_GPU_CARD_NAME).get(PASSTHROUGH_PROFILE).getRemainingCapacity());
+        assertEquals(Long.valueOf(1), result.get(A100_GPU_CARD_NAME).get(A100_MIG_PROFILE_NAME).getMaxCapacity());
+        assertEquals(Long.valueOf(0), result.get(A100_GPU_CARD_NAME).get(A100_MIG_PROFILE_NAME).getRemainingCapacity());
+        assertEquals(Long.valueOf(1), result.get(A100_GPU_CARD_NAME).get(A100_VF_PROFILE_NAME).getRemainingCapacity());
     }
 
     @Test
