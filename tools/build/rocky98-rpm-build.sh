@@ -43,7 +43,7 @@ if [ "$DISTRO" != "rocky9" ] && [ "$DISTRO" != "centos8" ]; then
     exit 1
 fi
 
-echo "== Rocky 9.7 RPM build helper =="
+echo "== Rocky 9.8 RPM build helper =="
 echo "ROOT_DIR=$ROOT_DIR"
 echo "DISTRO=$DISTRO"
 echo "PACK=$PACK"
@@ -58,10 +58,10 @@ echo "BUILD_SRPM=$BUILD_SRPM"
 echo "USE_TIMESTAMP=$USE_TIMESTAMP"
 echo "LOCAL_FAST=$LOCAL_FAST"
 
-DNF=(dnf --releasever=9.7 -y)
+DNF=(dnf --releasever=9.8 -y)
 
 "${DNF[@]}" install dnf-plugins-core
-dnf --releasever=9.7 config-manager --set-enabled crb || true
+dnf --releasever=9.8 config-manager --set-enabled crb || true
 "${DNF[@]}" install epel-release || true
 "${DNF[@]}" install \
     bash \
@@ -118,7 +118,7 @@ export MAVEN_OPTS="${MAVEN_OPTS:+$MAVEN_OPTS }-Dcom.sun.xml.bind.v2.bytecode.Cla
 
 git config --global --add safe.directory "$ROOT_DIR"
 
-mkdir -p "$ROOT_DIR/dist/rocky97-build"
+mkdir -p "$ROOT_DIR/dist/rocky98-build"
 {
     echo "date=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     echo "os_release=$(tr '\n' ' ' </etc/os-release)"
@@ -138,7 +138,7 @@ mkdir -p "$ROOT_DIR/dist/rocky97-build"
     echo "build_srpm=$BUILD_SRPM"
     echo "use_timestamp=$USE_TIMESTAMP"
     echo "local_fast=$LOCAL_FAST"
-} >"$ROOT_DIR/dist/rocky97-build/environment.txt"
+} >"$ROOT_DIR/dist/rocky98-build/environment.txt"
 
 build_args=(
     --distribution "$DISTRO"
@@ -186,4 +186,4 @@ cd "$ROOT_DIR/packaging"
 
 cd "$ROOT_DIR"
 find dist/rpmbuild -type f \( -name '*.rpm' -o -name '*.src.rpm' \) | sort \
-    > dist/rocky97-build/artifacts.txt
+    > dist/rocky98-build/artifacts.txt

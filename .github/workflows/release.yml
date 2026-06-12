@@ -259,7 +259,7 @@ jobs:
       - prepare-source-release
       - validate-build
       - validate-ui
-    uses: ./.github/workflows/rocky9-rpm.yml
+    uses: ./.github/workflows/rocky98-rpm.yml
     with:
       ref: ${{ needs.prepare-source-release.outputs.source_commit_sha }}
       pack: ${{ inputs.pack }}

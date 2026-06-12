@@ -48,8 +48,8 @@ That means Rocky 9.8 runtime validation cannot currently be executed directly on
 
 Use GitHub Actions as the source of truth for Rocky 9.8 packaging validation.
 
-- Workflow: `.github/workflows/rocky97-rpm.yml`
-- Build helper inside the container: `tools/build/rocky97-rpm-build.sh`
+- Workflow: `.github/workflows/rocky98-rpm.yml`
+- Build helper inside the container: `tools/build/rocky98-rpm-build.sh`
 - Packaging entry point: `packaging/package.sh --distribution rocky9`
 
 This path is preferred because:
@@ -114,10 +114,10 @@ Supported inputs:
 The workflow also runs for pull requests that touch:
 
 - `packaging/**`
-- `tools/build/rocky97-rpm-build.sh`
+- `tools/build/rocky98-rpm-build.sh`
 - `ui/**`
 - `pom.xml`
-- `.github/workflows/rocky97-rpm.yml`
+- `.github/workflows/rocky98-rpm.yml`
 
 ## Artifacts
 
@@ -125,9 +125,9 @@ The workflow uploads:
 
 - `dist/rpmbuild/RPMS/**/*.rpm`
 - `dist/rpmbuild/SRPMS/**/*.rpm`
-- `dist/rocky97-build/build.log`
-- `dist/rocky97-build/environment.txt`
-- `dist/rocky97-build/artifacts.txt`
+- `dist/rocky98-build/build.log`
+- `dist/rocky98-build/environment.txt`
+- `dist/rocky98-build/artifacts.txt`
 
 ## Historical Local Reproduction on macOS
 
@@ -147,8 +147,8 @@ docker run --rm \
   -e PACK=oss \
   -e NODE_VERSION=14.21.3 \
   -v "$PWD":/workspace \
-  ablestack/rocky97-build:latest \
-  bash -lc './tools/build/rocky97-rpm-build.sh'
+  ablestack/rocky98-build:latest \
+  bash -lc './tools/build/rocky98-rpm-build.sh'
 ```
 
 ## Validation Status

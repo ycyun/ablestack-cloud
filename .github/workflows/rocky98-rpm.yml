@@ -207,6 +207,7 @@ jobs:
           mkdir -p dist/rocky98-build
           set -o pipefail
           docker run --rm \
+            --platform linux/amd64 \
             --workdir /workspace \
             -e PACK="$BUILD_PACK" \
             -e SIMULATOR="$BUILD_SIMULATOR" \

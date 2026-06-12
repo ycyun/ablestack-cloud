@@ -992,7 +992,7 @@ n2k CLI 미설치 또는 agent wrapper 미지원이면 Nutanix source action을 
   - `cd ui && NODE_OPTIONS=--openssl-legacy-provider npm run build`
 - 검증됨: `git diff --check` 통과
 - 제약: 로컬 자동화 검증은 외부 vCenter/Nutanix/Cloud credential 없이 수행 가능한 smoke/unit/build 범위다. 22.x RBD target과 1.x SharedMountPoint target 실제 phase1/phase2/finalize E2E는 운영 credential을 런타임에 주입한 환경 검증으로 남는다.
-- 제약: UI production build는 현재 Rocky 9.7의 Node.js 16/OpenSSL 3 조합에서 Webpack 4 호환을 위해 `NODE_OPTIONS=--openssl-legacy-provider`가 필요하다.
+- 제약: UI production build는 현재 Rocky 9.8의 Node.js 16/OpenSSL 3 조합에서 Webpack 4 호환을 위해 `NODE_OPTIONS=--openssl-legacy-provider`가 필요하다.
 
 ## 9. 주요 리스크와 대응
 

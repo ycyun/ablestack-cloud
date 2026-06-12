@@ -65,7 +65,7 @@ under the License.
 
 권장 GitHub Actions 기준:
 - 개발용 Release: `.github/workflows/dev-release.yml`
-- 패키징 백엔드: `.github/workflows/rocky97-rpm.yml`
+- 패키징 백엔드: `.github/workflows/rocky98-rpm.yml`
 - 테스트 종료 후 정리: `.github/workflows/dev-release-cleanup.yml`
 
 운영 규칙:
