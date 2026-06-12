@@ -15,16 +15,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Rocky 9.7 RPM Packaging
+name: Rocky 9.8 RPM Packaging
 
 on:
   push:
     branches:
       - ablestack-europa
     paths:
-      - '.github/workflows/rocky97-rpm.yml'
+      - '.github/workflows/rocky98-rpm.yml'
       - 'packaging/**'
-      - 'tools/build/rocky97-rpm-build.sh'
+      - 'tools/build/rocky98-rpm-build.sh'
       - 'ui/**'
       - 'pom.xml'
   workflow_dispatch:
@@ -141,9 +141,9 @@ on:
         type: string
   pull_request:
     paths:
-      - '.github/workflows/rocky97-rpm.yml'
+      - '.github/workflows/rocky98-rpm.yml'
       - 'packaging/**'
-      - 'tools/build/rocky97-rpm-build.sh'
+      - 'tools/build/rocky98-rpm-build.sh'
       - 'ui/**'
       - 'pom.xml'
 
@@ -155,15 +155,15 @@ permissions:
   contents: read
 
 jobs:
-  rpm-rocky97:
+  rpm-rocky98:
     runs-on: ubuntu-24.04
     timeout-minutes: 240
     defaults:
       run:
         shell: bash
     env:
-      ROCKY97_URL: https://download.rockylinux.org/pub/rocky/9.7/images/x86_64/Rocky-9-Container-Base.latest.x86_64.tar.xz
-      ROCKY97_SHA256: 2213bb44c0f1bfd0bbef16118ab5a1ec6875362c5ad6c6dafdecf28d14151ad2
+      ROCKY98_URL: https://download.rockylinux.org/pub/rocky/9.8/images/x86_64/Rocky-9-Container-Base.latest.x86_64.tar.xz
+      ROCKY98_SHA256: 1210df99dcf0ef4d73940244e6d703935175629598b09c0e430da20e76768402
       BUILD_REF: ${{ inputs.ref || github.event.inputs.ref || github.ref }}
       BUILD_PACK: ${{ inputs.pack || github.event.inputs.pack || 'oss' }}
       BUILD_SIMULATOR: ${{ inputs.simulator || github.event.inputs.simulator || 'default' }}
@@ -175,7 +175,7 @@ jobs:
       BUILD_SRPM: ${{ inputs.build_srpm || github.event.inputs.build_srpm || 'false' }}
       BUILD_TEMPLATES: ${{ inputs.templates || github.event.inputs.templates || '' }}
       BUILD_NODE_VERSION: ${{ inputs.node_version || github.event.inputs.node_version || '14.21.3' }}
-      BUILD_ARTIFACT_NAME: ${{ inputs.artifact_name || format('rocky97-rpm-{0}', github.run_id) }}
+      BUILD_ARTIFACT_NAME: ${{ inputs.artifact_name || format('rocky98-rpm-{0}', github.run_id) }}
 
     steps:
       - uses: actions/checkout@v6
@@ -188,23 +188,23 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y skopeo xz-utils
 
-      - name: Download Rocky 9.7 container archive
+      - name: Download Rocky 9.8 container archive
         run: |
-          curl -fsSL -o /tmp/rocky97.tar.xz "$ROCKY97_URL"
-          echo "$ROCKY97_SHA256  /tmp/rocky97.tar.xz" | sha256sum -c -
+          curl -fsSL -o /tmp/rocky98.tar.xz "$ROCKY98_URL"
+          echo "$ROCKY98_SHA256  /tmp/rocky98.tar.xz" | sha256sum -c -
 
-      - name: Convert Rocky 9.7 OCI archive for Docker
+      - name: Convert Rocky 9.8 OCI archive for Docker
         run: |
-          xz -dc /tmp/rocky97.tar.xz > /tmp/rocky97.oci.tar
+          xz -dc /tmp/rocky98.tar.xz > /tmp/rocky98.oci.tar
           skopeo copy \
-            oci-archive:/tmp/rocky97.oci.tar \
-            docker-archive:/tmp/rocky97.docker.tar:ablestack/rocky97-build:latest
-          docker load -i /tmp/rocky97.docker.tar
-          docker image inspect ablestack/rocky97-build:latest >/dev/null
+            oci-archive:/tmp/rocky98.oci.tar \
+            docker-archive:/tmp/rocky98.docker.tar:ablestack/rocky98-build:latest
+          docker load -i /tmp/rocky98.docker.tar
+          docker image inspect ablestack/rocky98-build:latest >/dev/null
 
-      - name: Build RPM packages inside Rocky 9.7
+      - name: Build RPM packages inside Rocky 9.8
         run: |
-          mkdir -p dist/rocky97-build
+          mkdir -p dist/rocky98-build
           set -o pipefail
           docker run --rm \
             --workdir /workspace \
@@ -220,13 +220,13 @@ jobs:
             -e DISTRO="rocky9" \
             -e NODE_VERSION="$BUILD_NODE_VERSION" \
             -v "$GITHUB_WORKSPACE":/workspace \
-            ablestack/rocky97-build:latest \
-            bash -lc './tools/build/rocky97-rpm-build.sh' | tee dist/rocky97-build/build.log
+            ablestack/rocky98-build:latest \
+            bash -lc './tools/build/rocky98-rpm-build.sh' | tee dist/rocky98-build/build.log
 
       - name: Summarize RPM artifacts
         run: |
           {
-            echo "## Rocky 9.7 RPM Packaging"
+            echo "## Rocky 9.8 RPM Packaging"
             echo
             echo "- Ref: \`$BUILD_REF\`"
             echo "- Pack: \`$BUILD_PACK\`"
@@ -241,21 +241,21 @@ jobs:
             echo "- Node.js: \`$BUILD_NODE_VERSION\`"
             echo
             echo "### Artifacts"
-            if [ -f dist/rocky97-build/artifacts.txt ]; then
+            if [ -f dist/rocky98-build/artifacts.txt ]; then
               while IFS= read -r artifact; do
                 echo "- \`$artifact\`"
-              done < dist/rocky97-build/artifacts.txt
+              done < dist/rocky98-build/artifacts.txt
             else
               echo "- No artifact manifest was generated"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload Rocky 9.7 build outputs
+      - name: Upload Rocky 9.8 build outputs
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BUILD_ARTIFACT_NAME }}
           if-no-files-found: error
           path: |
-            dist/rocky97-build/**
+            dist/rocky98-build/**
             dist/rpmbuild/RPMS/**/*.rpm
             dist/rpmbuild/SRPMS/**/*.rpm

@@ -134,12 +134,12 @@ jobs:
             echo "source_commit_sha=$source_commit_sha"
             echo "release_tag=$release_tag"
             echo "release_name=$release_name"
-            echo "rpm_artifact_name=dev-rocky97-rpm-${{ github.run_id }}"
+            echo "rpm_artifact_name=dev-rocky98-rpm-${{ github.run_id }}"
           } >> "$GITHUB_OUTPUT"
 
   build-rpm:
     needs: metadata
-    uses: ./.github/workflows/rocky97-rpm.yml
+    uses: ./.github/workflows/rocky98-rpm.yml
     with:
       ref: ${{ needs.metadata.outputs.source_commit_sha }}
       pack: ${{ inputs.pack }}

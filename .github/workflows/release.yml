@@ -146,7 +146,7 @@ jobs:
             echo "package_version=$package_version"
             echo "timestamp_value=$timestamp_value"
             echo "source_artifact_name=source-release-${{ inputs.release_id }}"
-            echo "rpm_artifact_name=rocky97-rpm-${{ inputs.release_id }}"
+            echo "rpm_artifact_name=rocky98-rpm-${{ inputs.release_id }}"
           } >> "$GITHUB_OUTPUT"
 
   prepare-source-release:
@@ -259,7 +259,7 @@ jobs:
       - prepare-source-release
       - validate-build
       - validate-ui
-    uses: ./.github/workflows/rocky97-rpm.yml
+    uses: ./.github/workflows/rocky9-rpm.yml
     with:
       ref: ${{ needs.prepare-source-release.outputs.source_commit_sha }}
       pack: ${{ inputs.pack }}
